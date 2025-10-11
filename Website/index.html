@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+        <title>Catgirl Downloader</title>
+
+        <style>
+            :root {
+                --text: #ebe9fc;
+                --background: #000008;
+                --primary: #5d56d3;
+                --secondary: #3c31ff;
+                --accent: #bab7ff;
+            }
+
+            body {
+                background-image: url("Background.png");
+                background-repeat: no-repeat;
+                background-size: cover;
+            }
+
+            body, html {
+                height: 100%;
+                overflow: hidden;
+            }
+
+            #Content {
+                width: 90%;
+                height: 90%;
+                background-color: var(--background);
+                position: absolute;
+                left: 50%;
+                top: 50%;
+                transform: translate(-50%, -50%);
+                border-radius: 1em;
+            }
+
+            .text {
+                color: var(--text);
+                font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            }
+
+            .center {
+                text-align: center;
+            }
+
+            .heading {
+                font-size: 4em;
+            }
+
+            .btn {
+                background-color: var(--primary);
+                border: none;
+                color: var(--text);
+                padding: 12px 30px;
+                cursor: pointer;
+                margin: 0 auto;
+                font-size: 20px;
+            }
+
+            .btn-o {
+                background-color: transparent;
+                border: 2px solid var(--secondary);
+            }
+
+            .btn_parent {
+                text-align: center;
+            }
+
+            #other_versions {
+                display: flex;
+                justify-content: center;
+                flex-direction: row;
+                gap: 1em;
+            }
+        </style>
+    </head>
+    <body>
+        <div id="Content">
+            <h1 class="text center heading">Catgirl Downloader</h1>
+            <p class="text center">The purrrrfect tool for downloading catgirl photoes (cuz who doesn't like some catgirls)</p>
+            <div class="btn_parent">
+                <a href="Builds/ZIP/Catgirl Downloader 1.1.zip"><button class="btn"><i class="fa fa-download"></i> Download Latest</button></a>
+            </div>
+            <h2 class="text center">Other versions</h2>
+            <div id="other_versions">
+                <a href="Builds/ZIP/Catgirl Downloader 1.1.zip"><button class="btn btn-o"><i class="fa fa-download"></i> Download 1.1</button></a>
+                <a href="Builds/ZIP/Catgirl Downloader 1.0.zip"><button class="btn btn-o"><i class="fa fa-download"></i> Download 1.0</button></a>
+            </div>
+        </div>
+    </body>
+</html>

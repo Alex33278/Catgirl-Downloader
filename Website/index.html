@@ -16,7 +16,7 @@
             <div id="btn_parent">
                 <a href="Builds/Catgirl Downloader 1.3.zip"><button class="btn"><i class="fa fa-download"></i> Download Latest</button></a>
             </div>
-            <h2 class="text center">Other versions</h2>
+            <h2 class="text center section">Other versions</h2>
             <div id="other_versions">
                 <a href="Builds/Catgirl Downloader 1.3.zip"><button class="btn btn-o"><i class="fa fa-download"></i> Download 1.3</button></a>
                 <a href="Builds/Catgirl Downloader 1.2.zip"><button class="btn btn-o"><i class="fa fa-download"></i> Download 1.2</button></a>
@@ -26,8 +26,8 @@
             <div class="center">
                 <a href="Versions" class="text link internal">View all versions</a>
             </div>
-            <h2 class="text center">Changelog</h2>
-            <div class="text center list">
+            <h2 class="text center section">Changelog</h2>
+            <div class="text center compact">
                 <p>1.3 - Added prefrences saving</p>
                 <p>1.2 - Made downloads async</p>
                 <p>1.1 - Allow for downloading images</p>
@@ -35,14 +35,18 @@
                 <a href="Changelog" class="text link internal">View full changelog</a>
             </div>
             <br>
-            <p class="text center">Github repo: <a href="https://github.com/Alex33278/Catgirl-Downloader" target="_blank" class="link">https://github.com/Alex33278/Catgirl-Downloader</a></p>
+            <br>
+            <br>
+            <div class="text center compact">
+                <p>Github repo: <a href="https://github.com/Alex33278/Catgirl-Downloader" target="_blank" class="link">https://github.com/Alex33278/Catgirl-Downloader</a></p>
+                <p>All images are from <a href="https://nekos.moe" target="_blank" class="link">https://nekos.moe</a></p>
+            </div>
         </div>
 
         <!-- Versions -->
 
         <div id="Versions" class="Content">
             <h1 class="text center heading">Versions</h1>
-            <p class="text center">Below is a list of all versions of Catgirl Downloader.</p>
             <div id="other_versions">
                 <a href="Builds/Catgirl Downloader 1.3.zip"><button class="btn btn-o"><i class="fa fa-download"></i> Download 1.3</button></a>
                 <a href="Builds/Catgirl Downloader 1.2.zip"><button class="btn btn-o"><i class="fa fa-download"></i> Download 1.2</button></a>
@@ -58,7 +62,7 @@
 
         <div id="Changelog" class="Content">
             <h1 class="text center heading">Changelog</h1>
-            <div class="text center list">
+            <div class="text center compact">
                 <p>1.3 - Added prefrences saving</p>
                 <p>1.2 - Made downloads async</p>
                 <p>1.1 - Allow for downloading images</p>
@@ -70,6 +74,7 @@
         </div>
 
         <script>
+            // Navigating Pages
             const LINKS = document.querySelectorAll(".internal")
             const PAGES = document.querySelectorAll(".Content")
 
@@ -80,8 +85,47 @@
                         page.style.visibility = "hidden"
                     })
                     document.getElementById(element.getAttribute("href")).style.visibility = "visible"
+                    
+                    var refresh = window.location.protocol + "//" + window.location.host + window.location.pathname + '?content=' + element.getAttribute("href");    
+                    window.history.pushState({ path: refresh }, '', refresh);
                 })
             });
+
+            // Reading URL Params
+            function LoadContentFromURL() {
+                const queryString = window.location.search
+                const urlParams = new URLSearchParams(queryString)
+
+                PAGES.forEach(page => {
+                    page.style.visibility = "hidden"
+                })
+
+                if (urlParams.has("content")) {
+                    const page = urlParams.get("content")
+                    var validPage = false
+                    
+                    PAGES.forEach(pageE => {
+                        if (pageE.id == page) {
+                            pageE.style.visibility = "visible"
+                            validPage = true
+                        } else {
+                            pageE.style.visibility = "hidden"
+                        }
+                    })
+
+                    if (validPage) {
+                        return
+                    }
+                }
+                document.getElementById("Index").style.visibility = "visible"
+            }
+
+            window.addEventListener("popstate", function(event) {
+                history.pushState({ path: document.referrer }, null, document.referrer)
+                LoadContentFromURL()
+            })
+
+            LoadContentFromURL()
         </script>
     </body>
 </html>

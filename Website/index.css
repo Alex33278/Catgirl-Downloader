@@ -33,10 +33,6 @@ body, html {
     visibility: hidden;
 }
 
-#Index {
-    visibility: visible;
-}
-
 .text {
     color: var(--text);
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
@@ -54,6 +50,11 @@ body, html {
 
 .heading {
     font-size: 4em;
+}
+
+.section {
+    margin-bottom: .1em;
+    font-size: 2em;
 }
 
 .btn {
@@ -91,7 +92,7 @@ body, html {
     bottom: 0;
 }
 
-.list > * {
+.compact > * {
     margin: 0;
     padding: 0;
 }

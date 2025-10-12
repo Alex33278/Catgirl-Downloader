@@ -20,48 +20,58 @@
 
 # Catgirl Downloader
 # Windows version of https://github.com/NyarchLinux/CatgirlDownloader
-# Ver 1.1
+# Ver 1.3
 
 # Ver 1.0 - General Release
 # Ver 1.1 - Allow for downloading images
+# Ver 1.2 - Made downloads async
+# Ver 1.3 - Added prefrences saving
+
+VERSION = "1.3"
+
+import sys
+import os
+def relaunch():
+    os.execv(sys.executable, ['python3'] + sys.argv)
 
 try:
     import tkinter
     import tkinter.filedialog
     import requests
+    import queue
     import webbrowser
+    import threading
     import json
     import io
     from PIL import Image, ImageTk
 except ImportError:
-    import os
-    import sys
-    print(sys.executable)
     import importlib
     import tkinter.messagebox
+
     if tkinter.messagebox.askyesno("Catgirl Downloader", "Missing imports! Would you like to download them now?"):
         os.system("pip install pillow")
         os.system("pip install requests")
+        os.system("pip install webbrowser")
         importlib.invalidate_caches()
-        os.execv(sys.executable, ['python'] + sys.argv)
+        relaunch()
     sys.exit(0)
-
-VERSION = "1.1"
 
 root = tkinter.Tk()
 root.wm_title("Catgirl Downloader")
 root.wm_geometry("800x800")
-root.configure(bg="#1F1F1F")
 
 nsfw = tkinter.StringVar(value="Block")
 info = None
 running = True
-imageRefreshed = False
 imageBytes = None
+results = queue.Queue()
+
+RANDOM_URL = "https://nekos.moe/api/v1/random/image?nsfw="
+IMAGE_URL = "https://nekos.moe/image/"
 
 def GetPage(nsfw = False):
     try:
-        r = requests.get("https://nekos.moe/api/v1/random/image?nsfw=" + str(nsfw).lower(), timeout=10)
+        r = requests.get(RANDOM_URL + str(nsfw).lower(), timeout=10)
         if r.status_code == 200:
             return r.text
         else:
@@ -74,7 +84,7 @@ def GetPageURL(response):
     global info
     data = json.loads(response)
     info = data
-    return "https://nekos.moe/image/" + data["images"][0]['id']
+    return IMAGE_URL + data["images"][0]['id']
 
 def GetNeko(nsfw=False):
     return GetPageURL(GetPage(nsfw))
@@ -83,14 +93,16 @@ def GetImage(url):
     r = requests.get(url, timeout=20)
     return r.content
 
-def DownloadImage(nsfw):
-    global imageRefreshed
+def DownloadImage(results, nsfw):
     global imageBytes
     try:
         imageBytes = GetImage(GetNeko(nsfw))
-        imageRefreshed = True
+        results.put(imageBytes)
     except Exception as e:
         print(f"Failed to display image! {e}")
+
+def DownloadImageWrapper(nsfw):
+    threading.Thread(target=DownloadImage, args=(results, True if nsfw == "Only" else False), daemon=True).start()
 
 def CreateAboutWindow():
     window = tkinter.Toplevel()
@@ -104,31 +116,55 @@ def CreateAboutWindow():
     version = tkinter.Label(window, text=f"Version {VERSION}")
     version.pack()
 
-    content = tkinter.Text(window, text="All images are from nekos.moe")
+    content = tkinter.Text(window, wrap=tkinter.WORD, width=40)
     content.pack()
+    content.insert(tkinter.END, "All images are from ")
+    content.insert(tkinter.END, "https://nekos.moe", "hyperlink")
+    content.insert(tkinter.END, ". Licensed under the GNU GENERAL PUBLIC LICENSE V3")
 
-    license = tkinter.Label(window, text="This program is free software: you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version.", wraplength=300)
-    license.pack()
+    content.tag_configure("hyperlink", foreground="blue", underline=1)
+    content.tag_bind("hyperlink", "<Button-1>", lambda e: webbrowser.open_new_tab("https://nekos.moe"))
+    content.tag_bind("hyperlink", "<Enter>", lambda e: content.configure(cursor="hand2"))
+    content.tag_bind("hyperlink", "<Leave>", lambda e: content.configure(cursor=""))
+
+    content.configure(
+        state="disabled",
+        relief="flat",
+        borderwidth=0,
+        highlightthickness=0,
+        bg=window.cget('bg'),
+        font=("Arial", 10)
+    )
 
 def SaveImg():
+    if not imageBytes: return
     if not (filename := tkinter.filedialog.asksaveasfilename(title="Save Img as", filetypes=[("JPG files", "*.jpg"), ('All files', '*.*')], defaultextension=".jpg")): return
     with open(filename, "wb") as file:
         file.write(imageBytes)
         file.close()
 
+def resetPreferences():
+    if os.path.isfile("preferences.cgd.json"):
+        os.remove("preferences.cgd.json")
+        relaunch()
+
 menubar = tkinter.Menu(root)
-nsfwMenu = tkinter.Menu(menubar, tearoff=0)
+
+preferencesMenu = tkinter.Menu(menubar, tearoff=0)
+nsfwMenu = tkinter.Menu(preferencesMenu, tearoff=0)
 nsfwMenu.add_radiobutton(label="Block", variable=nsfw)
 nsfwMenu.add_radiobutton(label="Only", variable=nsfw)
-menubar.add_cascade(label="NSFW Settings", menu=nsfwMenu)
+preferencesMenu.add_cascade(label="NSFW Settings", menu=nsfwMenu)
+preferencesMenu.add_separator()
+preferencesMenu.add_command(label="Reset Preferences", command=resetPreferences)
+menubar.add_cascade(label="Preferences", menu=preferencesMenu)
 
 helpMenu = tkinter.Menu(menubar, tearoff=0)
 helpMenu.add_command(label="About", command=CreateAboutWindow)
 menubar.add_cascade(label="Help", menu=helpMenu)
 
 menubar.add_command(label="Save", command=SaveImg)
-
-menubar.add_command(label="Refresh", command=lambda: DownloadImage(False if nsfw.get() == "Block" else True))
+menubar.add_command(label="Refresh", command=lambda: DownloadImageWrapper(nsfw.get()))
 
 root.config(menu=menubar)
 
@@ -185,22 +221,47 @@ class CanvasImage(tkinter.Canvas):
         self.resize_image()
         self.paste_image()
 
+def SavePreferences():
+    with open("preferences.cgd.json", "w") as file:
+        json.dump({"NSFW": nsfw.get(), "WIN_SIZE": root.geometry().split("+")[0]}, file, indent=None)
+        file.close()
+
+def LoadPreferences():
+    if os.path.isfile("preferences.cgd.json"):
+        try:
+            preferences = None
+            with open("preferences.cgd.json", "r") as file:
+                preferences = json.load(file)
+        
+            if "NSFW" in preferences:
+                nsfw.set(preferences["NSFW"])
+            if "WIN_SIZE" in preferences:
+                root.wm_geometry(preferences["WIN_SIZE"].split("+")[0])
+        except Exception as e:
+            print(f"Error loading preferences! {e}")
+            return
+
 def onClose():
     global running
     running = False
+    SavePreferences()
     root.destroy()
 
-canvasImg = CanvasImage(root, relief="sunken")
+canvasImg = CanvasImage(root)
 canvasImg.pack(expand=True, fill="both")
 
-DownloadImage(False if nsfw.get() == "Block" else True)
+LoadPreferences()
+
+DownloadImageWrapper(nsfw.get())
 root.protocol("WM_DELETE_WINDOW", onClose)
 
 while running:
     root.update()
     root.update_idletasks()
 
-    if imageRefreshed:
+    try:
+        res = results.get_nowait()
+        imageBytes = res
         canvasImg.open_image(imageBytes)
-
-        imageRefreshed = False
+    except queue.Empty:
+        pass

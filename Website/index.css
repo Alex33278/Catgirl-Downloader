@@ -76,7 +76,7 @@ body, html {
     text-align: center;
 }
 
-#other_versions {
+.other_versions {
     display: flex;
     justify-content: center;
     flex-direction: row;
@@ -87,22 +87,21 @@ body, html {
     color: var(--accent);
 }
 
-.bottom {
-    position: absolute;
-    bottom: 0;
-}
-
 .compact > * {
     margin: 0;
     padding: 0;
 }
 
+hr {
+    border-color: var(--accent);
+}
+
 @media screen and (max-width: 800px) {
-    #other_versions {
+    .other_versions {
         flex-direction: column;
     }
 
-    #other_versions > a > button {
+    .other_versions > a > button {
         width: 100%;
     }
 }
